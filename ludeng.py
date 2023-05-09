@@ -59,7 +59,7 @@ def send_ludeng(config, streamInfo):
 import requests
 
 
-def updateLiveStatus():  # 获取直播间开播状态信息
+async def updateLiveStatus():  # 获取直播间开播状态信息
     url = "http://api.live.bilibili.com/room/v1/Room/get_info?room_id="
     for ROOM_ID in streaminfos.keys():
         res = requests.get(url + ROOM_ID).json()
@@ -69,12 +69,16 @@ def updateLiveStatus():  # 获取直播间开播状态信息
         if streaminfos[ROOM_ID]['live_status'] == 0 and res["data"]["live_status"] == 1:  # 刚刚开播
             send_start_email(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
             streaminfos[ROOM_ID]['danmu_file_name'] = "{}{}路灯.txt".format(
-                streaminfos[ROOM_ID]['live_time'].replace(" ", "-").replace(":", "-"), streamInfo['title'])
+                streaminfos[ROOM_ID]['live_time'].replace(" ", "-").replace(":", "-"), streaminfos[ROOM_ID]['title'])
         elif streaminfos[ROOM_ID]['live_status'] == 1 and (
                 res["data"]["live_status"] == 0 or res["data"]["live_status"] == 2):  # 刚刚下播
             send_ludeng(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
         streaminfos[ROOM_ID]['live_status'] = res["data"]["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中
 
+async def updateLiveStatus_loop():
+    while True:
+        await asyncio.sleep(1)
+        await updateLiveStatus()
 
 def processDanmu(danmu_file_name):
     # TODO: process Danmu
@@ -108,8 +112,8 @@ async def run_multi_clients():
 
 
 async def write_to_file(text, filename):
-    async with aiofiles.open(filename, mode='a') as f:
-        await f.write(text)
+    async with aiofiles.open(filename, mode='a', encoding="utf-8") as f:
+        await f.write(text+"\n")
 
 
 class MyHandler(blivedm.BaseHandler):
@@ -128,8 +132,8 @@ class MyHandler(blivedm.BaseHandler):
 
     async def _on_danmaku(self, client: blivedm.BLiveClient, message: blivedm.DanmakuMessage):
         global streamInfo
-        await write_to_file(message, streamInfo[client.room_id]["danmu_file_name"])
-        # print(f'[{client.room_id}] 弹幕：{message}')
+        await write_to_file(f'{message}', streaminfos[f'{client.room_id}']["danmu_file_name"])
+        print(f'[{client.room_id}] 弹幕：{message}')
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         print(f'[{client.room_id}] 礼物：{message}')
@@ -142,8 +146,11 @@ class MyHandler(blivedm.BaseHandler):
 
 
 async def main():
-    await run_multi_clients()
-
+    await updateLiveStatus()
+    task_1 = asyncio.create_task(run_multi_clients())
+    task_2 = asyncio.create_task(updateLiveStatus_loop())
+    await task_1
+    await task_2
 
 if __name__ == '__main__':
     asyncio.run(main())
