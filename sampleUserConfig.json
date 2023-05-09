@@ -1,0 +1,16 @@
+{
+"FROM_ADDRESS":"email@gmail.com",
+"PASSWORD" : "password",
+"ROOM_ID" : "123456789",
+"PAIZI" : "牌子",
+"ROOM_NAME" : "房间名",
+"LVL_LIMIT" : 10,
+"KEYWORD" : "@灯",
+"HIGHLIGHT_KEYWORDS" : {"?":["？？", "??"], "哈哈":["哈哈", "hh","haha"]},
+"HIGHLIGHT_THRESHOLD" : 5,
+"HIGHLIGHT_TIMEFRAME" : 30,
+"LUDENG_USER" : {"<uid>": "email@email.com"},
+"NOTIFY_USER" : {"20052482": "email@email.com"},
+"BLOCKED_USER" : [],
+"SEND_LIVE_NOTICE" : 0
+}
