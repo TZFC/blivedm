@@ -40,13 +40,13 @@ def send_ludeng(config, streamInfo):
     msg["From"] = config["FROM_ADDRESS"]
     msg["To"] = ",".join(config["LUDENG_USER"].values())
     msg["Subject"] = "{}于{}".format(config['ROOM_NAME'], streamInfo["danmu_file_name"][:-4])
-    body, attachFile = getDeng(config, streamInfo)
+    body = getDeng(config, streamInfo)
     msg.attach(MIMEText(body, "plain"))
     p = MIMEBase("application", "octet-stream")
-    with open(attachFile, "rb") as attachment:
+    with open(streamInfo["danmu_file_name"], "rb") as attachment:
         p.set_payload((attachment).read())
     encoders.encode_base64(p)
-    p.add_header("Content-Disposition", "attachment", filename=attachFile)
+    p.add_header("Content-Disposition", "attachment", filename=streamInfo["danmu_file_name"])
     msg.attach(p)  # 邮件附件是 filename
     email_session = smtplib.SMTP("smtp.gmail.com", 587)
     email_session.starttls()
@@ -63,29 +63,88 @@ async def updateLiveStatus():  # 获取直播间开播状态信息
     url = "http://api.live.bilibili.com/room/v1/Room/get_info?room_id="
     for ROOM_ID in streaminfos.keys():
         res = requests.get(url + ROOM_ID).json()
-        streaminfos[ROOM_ID]['title'] = res["data"]["title"]
-        streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
-        streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
         if streaminfos[ROOM_ID]['live_status'] == 0 and res["data"]["live_status"] == 1:  # 刚刚开播
-            send_start_email(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
+            streaminfos[ROOM_ID]['title'] = res["data"]["title"]
+            streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
+            streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
+            if userConfigs[ROOM_ID]["SEND_LIVE_NOTICE"] == 1:
+                send_start_email(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
             streaminfos[ROOM_ID]['danmu_file_name'] = "{}{}路灯.txt".format(
                 streaminfos[ROOM_ID]['live_time'].replace(" ", "-").replace(":", "-"), streaminfos[ROOM_ID]['title'])
+            with open(streaminfos[ROOM_ID]['danmu_file_name'],"a",encoding="utf-8") as ludeng:
+                ludeng.write("{}于{}开始直播\n".format(userConfigs[ROOM_ID]["ROOM_NAME"], streaminfos[ROOM_ID]['live_time']))
         elif streaminfos[ROOM_ID]['live_status'] == 1 and (
                 res["data"]["live_status"] == 0 or res["data"]["live_status"] == 2):  # 刚刚下播
             send_ludeng(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
+            streaminfos[ROOM_ID]['title'] = res["data"]["title"]
+            streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
+            streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
         streaminfos[ROOM_ID]['live_status'] = res["data"]["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中
 
 async def updateLiveStatus_loop():
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(3)
         await updateLiveStatus()
 
-
+import datetime
+def unix2Datetime(unixString):
+    return datetime.datetime.fromtimestamp(int(unixString)/1000, datetime.timezone.utc).replace(microsecond=0)
+def cn2Datetime(cnString):
+    cntimezone = datetime.timezone(datetime.timedelta(hours=8))
+    return datetime.datetime.strptime(cnString, '%Y-%m-%d %H:%M:%S').replace(tzinfo=cntimezone).replace(microsecond=0)
 def getDeng(config, streamInfo):
-    # TODO: use config to process Danmu
-    with open(streamInfo["danmu_file_name"], "r") as luDeng:
-        luDengText = luDeng.read()
-    return luDengText
+    with open(streamInfo["danmu_file_name"], "r", encoding="utf-8") as danmu:
+        danmuText = danmu.readlines()
+    start_time = cn2Datetime(streamInfo['live_time'])
+    keyword_timestamps={} # keyword:[unix timestamp in integers]
+    for keyword in config["HIGHLIGHT_KEYWORDS"].keys():
+        keyword_timestamps[keyword]=[]
+    luDeng = danmuText[0]
+    tiaoZhuan = ""
+    for line in danmuText[1:]:
+        timestamp, uname, uid, dm_type, medal_room, medal_level, text = line.split(";", maxsplit=6)
+        send_time = unix2Datetime(timestamp)
+        timediff = send_time-start_time
+        # luDeng extraction
+        if dm_type=="0" and medal_room==config["ROOM_ID"] and int(medal_level)>=config["LVL_LIMIT"] and text[:len(config["KEYWORD"])] == config["KEYWORD"]:
+            luDeng+="{} {} {}\n".format(send_time.replace(tzinfo=None), text[len(config["KEYWORD"]):], uname)
+            tiaoZhuan+="{} {}\n".format(timediff, text[:len(config["KEYWORD"])])
+        # frequency record
+        for keyword in keyword_timestamps.keys():
+            for variance in config["HIGHLIGHT_KEYWORDS"][keyword]:
+                if variance in text:
+                    keyword_timestamps[keyword].append(int(timestamp))
+    # frequency analysis
+    frequency_result=""
+    for keyword in keyword_timestamps.keys():
+        idx=0
+        density = config["HIGHLIGHT_TIMEFRAME"]*1000/config["HIGHLIGHT_THRESHOLD"]
+        frequency_periods = {}
+        while idx<=len(keyword_timestamps[keyword]) - config["HIGHLIGHT_THRESHOLD"]:
+            end_idx = idx + config["HIGHLIGHT_THRESHOLD"] # not included
+            if keyword_timestamps[keyword][end_idx-1] - keyword_timestamps[keyword][idx] >= int(config["HIGHLIGHT_TIMEFRAME"])*1000:
+                # did not meet threshold
+                idx += 1
+                continue
+            # meet the highlight threshold in timeframe
+            while end_idx<len(keyword_timestamps[keyword]):
+                if keyword_timestamps[keyword][end_idx] - keyword_timestamps[keyword][end_idx-1] >= density:
+                    if keyword in frequency_periods.keys():
+                        frequency_periods[keyword].append((idx,end_idx))
+                    else:
+                        frequency_periods[keyword]=[(idx,end_idx)]
+                    break
+                # keep elongating index range while interval is less than density
+                end_idx+=1
+            idx = end_idx
+        if keyword in frequency_periods.keys():
+            frequency_result+="{} 在 ".format(keyword)
+            for (start, end) in frequency_periods[keyword]:
+                frequency_result += "{}({}条), ".format(unix2Datetime(str(keyword_timestamps[keyword][start])), end-start)
+            frequency_result+="\n"
+    # Compose Ludeng
+    body = luDeng + "\n" + tiaoZhuan + "\n" + frequency_result
+    return body
 
 
 import asyncio
