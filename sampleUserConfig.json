@@ -2,7 +2,6 @@
 "FROM_ADDRESS":"email@gmail.com",
 "PASSWORD" : "password",
 "ROOM_ID" : "123456789",
-"PAIZI" : "牌子",
 "ROOM_NAME" : "房间名",
 "LVL_LIMIT" : 10,
 "KEYWORD" : "@灯",

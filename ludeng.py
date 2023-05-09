@@ -80,13 +80,12 @@ async def updateLiveStatus_loop():
         await asyncio.sleep(1)
         await updateLiveStatus()
 
-def processDanmu(danmu_file_name):
-    # TODO: process Danmu
-    return danmu_file_name
-
 
 def getDeng(config, streamInfo):
-    return processDanmu(streamInfo["danmu_file_name"]), streamInfo["danmu_file_name"]
+    # TODO: use config to process Danmu
+    with open(streamInfo["danmu_file_name"], "r") as luDeng:
+        luDengText = luDeng.read()
+    return luDengText
 
 
 import asyncio
@@ -115,6 +114,8 @@ async def write_to_file(text, filename):
     async with aiofiles.open(filename, mode='a', encoding="utf-8") as f:
         await f.write(text+"\n")
 
+def cleanMessage(message):
+    return f"{message.timestamp};{message.uname};{message.uid};{message.dm_type};{message.medal_room_id};{message.medal_level};{message.msg}"
 
 class MyHandler(blivedm.BaseHandler):
     # # 演示如何添加自定义回调
@@ -128,21 +129,26 @@ class MyHandler(blivedm.BaseHandler):
 
     async def _on_heartbeat(self, client: blivedm.BLiveClient, message: blivedm.HeartbeatMessage):
         pass
-        # print(f'[{client.room_id}] 当前人气值：{message}')
+        #print(f'[{client.room_id}] 当前人气值：{message}')
 
     async def _on_danmaku(self, client: blivedm.BLiveClient, message: blivedm.DanmakuMessage):
         global streamInfo
-        await write_to_file(f'{message}', streaminfos[f'{client.room_id}']["danmu_file_name"])
+        if streaminfos[f'{client.room_id}']["live_status"] ==1:
+            cleaned_message = cleanMessage(message)
+            await write_to_file(f'{cleaned_message}', streaminfos[f'{client.room_id}']["danmu_file_name"])
         print(f'[{client.room_id}] 弹幕：{message}')
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
-        print(f'[{client.room_id}] 礼物：{message}')
+        pass
+        #print(f'[{client.room_id}] 礼物：{message}')
 
     async def _on_buy_guard(self, client: blivedm.BLiveClient, message: blivedm.GuardBuyMessage):
-        print(f'[{client.room_id}] 上舰：{message}')
+        pass
+        #print(f'[{client.room_id}] 上舰：{message}')
 
     async def _on_super_chat(self, client: blivedm.BLiveClient, message: blivedm.SuperChatMessage):
-        print(f'[{client.room_id}] 醒目留言 {message}')
+        pass
+        #print(f'[{client.room_id}] 醒目留言 {message}')
 
 
 async def main():
