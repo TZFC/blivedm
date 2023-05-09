@@ -87,6 +87,7 @@ async def updateLiveStatus_loop():
         await updateLiveStatus()
 
 import datetime
+cntimezone = datetime.timezone(datetime.timedelta(hours=8))
 def unix2Datetime(unixString):
     return datetime.datetime.fromtimestamp(int(unixString)/1000, datetime.timezone.utc).replace(microsecond=0)
 def cn2Datetime(cnString):
@@ -107,8 +108,8 @@ def getDeng(config, streamInfo):
         timediff = send_time-start_time
         # luDeng extraction
         if dm_type=="0" and medal_room==config["ROOM_ID"] and int(medal_level)>=config["LVL_LIMIT"] and text[:len(config["KEYWORD"])] == config["KEYWORD"]:
-            luDeng+="{} {} {}\n".format(send_time.replace(tzinfo=None), text[len(config["KEYWORD"]):], uname)
-            tiaoZhuan+="{} {}\n".format(timediff, text[:len(config["KEYWORD"])])
+            luDeng+="{} {} {}\n".format(send_time.astimezone(cntimezone).replace(tzinfo=None), text[len(config["KEYWORD"]):], uname)
+            tiaoZhuan+="{} {}\n".format(timediff, text[len(config["KEYWORD"]):])
         # frequency record
         for keyword in keyword_timestamps.keys():
             for variance in config["HIGHLIGHT_KEYWORDS"][keyword]:
@@ -140,7 +141,7 @@ def getDeng(config, streamInfo):
         if keyword in frequency_periods.keys():
             frequency_result+="{} 在 ".format(keyword)
             for (start, end) in frequency_periods[keyword]:
-                frequency_result += "{}({}条), ".format(unix2Datetime(str(keyword_timestamps[keyword][start])), end-start)
+                frequency_result += "{}({}条), ".format(unix2Datetime(str(keyword_timestamps[keyword][start])).astimezone(cntimezone).replace(tzinfo=None), end-start)
             frequency_result+="\n"
     # Compose Ludeng
     body = luDeng + "\n" + tiaoZhuan + "\n" + frequency_result
