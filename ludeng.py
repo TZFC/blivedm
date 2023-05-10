@@ -167,7 +167,7 @@ def getDeng(config, streamInfo):
                     end - start)
             frequency_result += "\n"
     # Compose Ludeng
-    body = luDeng + "\n" + tiaoZhuan + "\n" + frequency_result
+    body = "路灯：\n" + luDeng + "\n" + "录播跳转：\n" + tiaoZhuan + "\n" + frequency_result
     return body
 
 
