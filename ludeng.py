@@ -47,7 +47,7 @@ def send_ludeng(config, streamInfo):
     with open(streamInfo["danmu_file_name"], "rb") as attachment:
         p.set_payload((attachment).read())
     encoders.encode_base64(p)
-    p.add_header("Content-Disposition", "attachment", filename=streamInfo["danmu_file_name"])
+    p.add_header("Content-Disposition", "attachment", filename=streamInfo["danmu_file_name"].split("/", 2)[-1])
     msg.attach(p)  # 邮件附件是 filename
     email_session = smtplib.SMTP("smtp.gmail.com", 587)
     email_session.starttls()
@@ -221,7 +221,6 @@ class MyHandler(blivedm.BaseHandler):
         if streaminfos[f'{client.room_id}']["live_status"] == 1:
             cleaned_message = cleanMessage(message)
             await write_to_file(f'{cleaned_message}', streaminfos[f'{client.room_id}']["danmu_file_name"])
-        print(f'[{client.room_id}] 弹幕：{message}')
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         pass
