@@ -79,6 +79,7 @@ async def updateLiveStatus():  # 获取直播间开播状态信息
         elif streaminfos[ROOM_ID]['live_status'] == 1 and (
                 res["data"]["live_status"] == 0 or res["data"]["live_status"] == 2):  # 刚刚下播
             send_ludeng(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
+            print("{} sent ludeng".format(ROOM_ID))
             streaminfos[ROOM_ID]['title'] = res["data"]["title"]
             streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
             streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
