@@ -70,7 +70,7 @@ async def updateLiveStatus():  # 获取直播间开播状态信息
             streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
             if userConfigs[ROOM_ID]["SEND_LIVE_NOTICE"] == 1:
                 send_start_email(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
-            streaminfos[ROOM_ID]['danmu_file_name'] = "{}{}路灯.txt".format(
+            streaminfos[ROOM_ID]['danmu_file_name'] = "danmu/{}/{}{}路灯.txt".format(userConfigs[ROOM_ID]["ROOM_NAME"],
                 streaminfos[ROOM_ID]['live_time'].replace(" ", "-").replace(":", "-"), streaminfos[ROOM_ID]['title'])
             with open(streaminfos[ROOM_ID]['danmu_file_name'], "a", encoding="utf-8") as ludeng:
                 ludeng.write(
