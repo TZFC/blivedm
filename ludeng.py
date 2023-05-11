@@ -41,7 +41,9 @@ def send_ludeng(config, streamInfo):
     msg["From"] = config["FROM_ADDRESS"]
     msg["To"] = ",".join(config["LUDENG_USER"].values())
     msg["Subject"] = "{}于{}".format(config['ROOM_NAME'], streamInfo["danmu_file_name"][:-4].split("/", 2)[-1])
+    print("getting ludeng for {}".format(config['ROOM_NAME']))
     body = getDeng(config, streamInfo)
+    print("got ludeng for {}".format(config['ROOM_NAME']))
     msg.attach(MIMEText(body, "plain"))
     p = MIMEBase("application", "octet-stream")
     with open(streamInfo["danmu_file_name"], "rb") as attachment:
@@ -115,6 +117,7 @@ def getDeng(config, streamInfo):
         keyword_timestamps[keyword] = []
     luDeng = danmuText[0]
     tiaoZhuan = ""
+    print("ludeng initialized for {}".format(config['ROOM_NAME']))
     for line in danmuText[1:]:
         timestamp, uname, uid, dm_type, medal_room, medal_level, text = line.split(";", maxsplit=6)
         send_time = unix2Datetime(timestamp)
