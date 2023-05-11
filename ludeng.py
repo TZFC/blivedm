@@ -123,13 +123,14 @@ def getDeng(config, streamInfo):
             and int(medal_level) >= config["LVL_LIMIT"] \
             and text[:len(config["KEYWORD"])] == config["KEYWORD"]:
             luDeng += "{} {} {}\n".format(send_time.astimezone(cntimezone).replace(tzinfo=None),
-                                          text[len(config["KEYWORD"]):], uname)
-            tiaoZhuan += "{} {}\n".format(timediff, text[len(config["KEYWORD"]):])
+                                          text[len(config["KEYWORD"]):-1], uname)
+            tiaoZhuan += "{} {}\n".format(timediff, text[len(config["KEYWORD"]):-1])
         # frequency record
         for keyword in keyword_timestamps.keys():
             for variance in config["HIGHLIGHT_KEYWORDS"][keyword]:
                 if variance in text:
                     keyword_timestamps[keyword].append(int(timestamp))
+    print(keyword_timestamps)
     # frequency analysis
     frequency_result = ""
     for keyword in keyword_timestamps.keys():
@@ -159,6 +160,7 @@ def getDeng(config, streamInfo):
                 else:
                     frequency_periods[keyword] = [(idx, end_idx)]
             idx = end_idx
+        print(frequency_periods)
         if keyword in frequency_periods.keys():
             frequency_result += "{} 在 ".format(keyword)
             for (start, end) in frequency_periods[keyword]:
@@ -166,8 +168,11 @@ def getDeng(config, streamInfo):
                     unix2Datetime(str(keyword_timestamps[keyword][start])).astimezone(cntimezone).replace(tzinfo=None),
                     end - start)
             frequency_result += "\n"
+    print(frequency_result)
     # Compose Ludeng
     body = "路灯：\n" + luDeng + "\n" + "录播跳转：\n" + tiaoZhuan + "\n" + frequency_result
+    with open(streamInfo["danmu_file_name"], "a", encoding="utf-8") as danmu:
+        danmu.write(body)
     return body
 
 
