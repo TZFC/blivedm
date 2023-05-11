@@ -40,7 +40,7 @@ def send_ludeng(config, streamInfo):
     msg = MIMEMultipart()
     msg["From"] = config["FROM_ADDRESS"]
     msg["To"] = ",".join(config["LUDENG_USER"].values())
-    msg["Subject"] = "{}于{}".format(config['ROOM_NAME'], streamInfo["danmu_file_name"][:-4])
+    msg["Subject"] = "{}于{}".format(config['ROOM_NAME'], streamInfo["danmu_file_name"][:-4].split("/", 2)[-1])
     body = getDeng(config, streamInfo)
     msg.attach(MIMEText(body, "plain"))
     p = MIMEBase("application", "octet-stream")
