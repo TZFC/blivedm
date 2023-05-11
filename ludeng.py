@@ -64,7 +64,7 @@ async def updateLiveStatus():  # 获取直播间开播状态信息
     url = "http://api.live.bilibili.com/room/v1/Room/get_info?room_id="
     for ROOM_ID in streaminfos.keys():
         res = requests.get(url + ROOM_ID).json()
-        if streaminfos[ROOM_ID]['live_status'] == 0 and res["data"]["live_status"] == 1:  # 刚刚开播
+        if (streaminfos[ROOM_ID]['live_status'] == 0 or streaminfos[ROOM_ID]['live_status'] == 2) and res["data"]["live_status"] == 1:  # 刚刚开播
             streaminfos[ROOM_ID]['title'] = res["data"]["title"]
             streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
             streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
