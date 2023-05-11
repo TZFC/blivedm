@@ -119,7 +119,11 @@ def getDeng(config, streamInfo):
     tiaoZhuan = ""
     print("ludeng initialized for {}".format(config['ROOM_NAME']))
     for line in danmuText[1:]:
-        timestamp, uname, uid, dm_type, medal_room, medal_level, text = line.split(";", maxsplit=6)
+        try:
+            timestamp, uname, uid, dm_type, medal_room, medal_level, text = line.split(";", maxsplit=6)
+        except:
+            print("Cannot process"+line)
+            continue
         send_time = unix2Datetime(timestamp)
         timediff = send_time - start_time
         # luDeng extraction
