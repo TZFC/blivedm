@@ -20,7 +20,7 @@ Python获取bilibili直播弹幕的库，使用WebSocket协议
 ## 路灯说明
 
 新监听房间：
-1. 以sampleUserCOnfig.json为模板编写配置文件
+1. 以sampleUserConfig.json为模板编写配置文件
 2. 将配置文件名加入ludengConfig.json
     ```
     {
