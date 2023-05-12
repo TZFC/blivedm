@@ -37,8 +37,6 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
         elif streamInfos[ROOM_ID]['live_status'] == 1 and (
                 res["data"]["live_status"] == 0 or res["data"]["live_status"] == 2):  # 刚刚下播
             liveEndActions(userConfigs, streamInfos, ROOM_ID, res)
-        else:
-            return
         streamInfos[ROOM_ID]['live_status'] = res["data"]["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中
 
 
