@@ -1,193 +1,20 @@
-import json
+from configLoader import loadConfig
+from liveStatusUtil import updateLiveStatus, updateLiveStatus_loop
 
-with open('ludengConfig.json', 'r') as config:
-    ludengConfig = json.loads(config.read())
-
-userConfigs = {}
-streaminfos = {}
-for userConfig in ludengConfig["configs"]:
-    with open(userConfig, 'r', encoding="utf-8") as config:
-        thisConfig = json.loads(config.read())
-        userConfigs[thisConfig["ROOM_ID"]] = thisConfig
-        streaminfos[thisConfig["ROOM_ID"]] = {'live_status': 0, 'live_time': '0', 'keyframe': '0', 'title': '0',
-                                              'danmu_file_name': '0'}
-
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-import smtplib
-
-
-def send_start_email(config, streamInfo):
-    # send start notification
-    msg = MIMEMultipart()
-    msg["From"] = config["FROM_ADDRESS"]
-    msg["To"] = ",".join(config["NOTIFY_USER"].values())
-    msg["Subject"] = "{}开始直播{}".format(config['ROOM_NAME'], streamInfo['title'])
-    body = "{}开始直播{}".format(config['ROOM_NAME'], streamInfo['title'])
-    msg.attach(MIMEText(body, "plain"))
-    email_session = smtplib.SMTP("smtp.gmail.com", 587)
-    email_session.starttls()
-    email_session.login(config["FROM_ADDRESS"], config["PASSWORD"])
-    text = msg.as_string()
-    email_session.sendmail(config["FROM_ADDRESS"], config["NOTIFY_USER"].values(), text)
-    email_session.quit()
-
-
-def send_ludeng(config, streamInfo):
-    # send current ludeng with attached danmu record
-    msg = MIMEMultipart()
-    msg["From"] = config["FROM_ADDRESS"]
-    msg["To"] = ",".join(config["LUDENG_USER"].values())
-    msg["Subject"] = "{}于{}".format(config['ROOM_NAME'], streamInfo["danmu_file_name"][:-4].split("/", 2)[-1])
-    print("getting ludeng for {}".format(config['ROOM_NAME']))
-    body = getDeng(config, streamInfo)
-    print("got ludeng for {}".format(config['ROOM_NAME']))
-    msg.attach(MIMEText(body, "plain"))
-    p = MIMEBase("application", "octet-stream")
-    with open(streamInfo["danmu_file_name"], "rb") as attachment:
-        p.set_payload((attachment).read())
-    encoders.encode_base64(p)
-    p.add_header("Content-Disposition", "attachment", filename=streamInfo["danmu_file_name"].split("/", 2)[-1])
-    msg.attach(p)  # 邮件附件是 filename
-    email_session = smtplib.SMTP("smtp.gmail.com", 587)
-    email_session.starttls()
-    email_session.login(config["FROM_ADDRESS"], config["PASSWORD"])
-    text = msg.as_string()
-    email_session.sendmail(config["FROM_ADDRESS"], config["LUDENG_USER"].values(), text)
-    email_session.quit()
-
-
-import requests
-
-
-async def updateLiveStatus():  # 获取直播间开播状态信息
-    url = "http://api.live.bilibili.com/room/v1/Room/get_info?room_id="
-    for ROOM_ID in streaminfos.keys():
-        res = requests.get(url + ROOM_ID).json()
-        if (streaminfos[ROOM_ID]['live_status'] == 0 or streaminfos[ROOM_ID]['live_status'] == 2) and res["data"]["live_status"] == 1:  # 刚刚开播
-            streaminfos[ROOM_ID]['title'] = res["data"]["title"]
-            streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
-            streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
-            if userConfigs[ROOM_ID]["SEND_LIVE_NOTICE"] == 1:
-                send_start_email(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
-            streaminfos[ROOM_ID]['danmu_file_name'] = "danmu/{}/{}{}路灯.txt".format(userConfigs[ROOM_ID]["ROOM_NAME"],
-                streaminfos[ROOM_ID]['live_time'].replace(" ", "-").replace(":", "-"), streaminfos[ROOM_ID]['title'])
-            print("{} file created {}".format(ROOM_ID, streaminfos[ROOM_ID]['danmu_file_name']))
-            with open(streaminfos[ROOM_ID]['danmu_file_name'], "a", encoding="utf-8") as ludeng:
-                ludeng.write(
-                    "{}于{}开始直播\n".format(userConfigs[ROOM_ID]["ROOM_NAME"], streaminfos[ROOM_ID]['live_time']))
-        elif streaminfos[ROOM_ID]['live_status'] == 1 and (
-                res["data"]["live_status"] == 0 or res["data"]["live_status"] == 2):  # 刚刚下播
-            send_ludeng(userConfigs[ROOM_ID], streaminfos[ROOM_ID])
-            print("{} sent ludeng".format(ROOM_ID))
-            streaminfos[ROOM_ID]['title'] = res["data"]["title"]
-            streaminfos[ROOM_ID]['live_time'] = res["data"]["live_time"]
-            streaminfos[ROOM_ID]['keyframe'] = res["data"]["keyframe"]
-        streaminfos[ROOM_ID]['live_status'] = res["data"]["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中
-
-
-async def updateLiveStatus_loop():
-    while True:
-        await asyncio.sleep(3)
-        await updateLiveStatus()
-
-
-import datetime
-
-cntimezone = datetime.timezone(datetime.timedelta(hours=8))
-
-
-def unix2Datetime(unixString):
-    return datetime.datetime.fromtimestamp(int(unixString) / 1000, datetime.timezone.utc).replace(microsecond=0)
-
-
-def cn2Datetime(cnString):
-    cntimezone = datetime.timezone(datetime.timedelta(hours=8))
-    return datetime.datetime.strptime(cnString, '%Y-%m-%d %H:%M:%S').replace(tzinfo=cntimezone).replace(microsecond=0)
-
-
-def getDeng(config, streamInfo):
-    with open(streamInfo["danmu_file_name"], "r", encoding="utf-8") as danmu:
-        danmuText = danmu.readlines()
-    start_time = cn2Datetime(streamInfo['live_time'])
-    keyword_timestamps = {}  # keyword:[unix timestamp in integers]
-    for keyword in config["HIGHLIGHT_KEYWORDS"].keys():
-        keyword_timestamps[keyword] = []
-    luDeng = danmuText[0]
-    tiaoZhuan = ""
-    print("ludeng initialized for {}".format(config['ROOM_NAME']))
-    for line in danmuText[1:]:
-        try:
-            timestamp, uname, uid, dm_type, medal_room, medal_level, text = line.split(";", maxsplit=6)
-        except:
-            print("Cannot process"+line)
-            continue
-        send_time = unix2Datetime(timestamp)
-        timediff = send_time - start_time
-        # luDeng extraction
-        if dm_type == "0" \
-            and medal_room == config["ROOM_ID"] \
-            and int(medal_level) >= config["LVL_LIMIT"] \
-            and text[:len(config["KEYWORD"])] == config["KEYWORD"]:
-            luDeng += "{} {} {}\n".format(send_time.astimezone(cntimezone).replace(tzinfo=None),
-                                          text[len(config["KEYWORD"]):-1], uname)
-            tiaoZhuan += "{} {}\n".format(timediff, text[len(config["KEYWORD"]):-1])
-        # frequency record
-        for keyword in keyword_timestamps.keys():
-            for variance in config["HIGHLIGHT_KEYWORDS"][keyword]:
-                if variance in text:
-                    keyword_timestamps[keyword].append(int(timestamp))
-    print(keyword_timestamps)
-    # frequency analysis
-    frequency_result = ""
-    for keyword in keyword_timestamps.keys():
-        idx = 0
-        density = config["HIGHLIGHT_TIMEFRAME"] * 1000 / config["HIGHLIGHT_THRESHOLD"]
-        frequency_periods = {}
-        while idx <= len(keyword_timestamps[keyword]) - config["HIGHLIGHT_THRESHOLD"]:
-            end_idx = idx + config["HIGHLIGHT_THRESHOLD"]  # not included
-            if keyword_timestamps[keyword][end_idx - 1] - keyword_timestamps[keyword][idx] >= int(
-                    config["HIGHLIGHT_TIMEFRAME"]) * 1000:
-                # did not meet threshold
-                idx += 1
-                continue
-            # meet the highlight threshold in timeframe
-            while end_idx < len(keyword_timestamps[keyword]):
-                if keyword_timestamps[keyword][end_idx] - keyword_timestamps[keyword][end_idx - 1] >= density:
-                    if keyword in frequency_periods.keys():
-                        frequency_periods[keyword].append((idx, end_idx))
-                    else:
-                        frequency_periods[keyword] = [(idx, end_idx)]
-                    break
-                # keep elongating index range while interval is less than density
-                end_idx += 1
-            if end_idx == len(keyword_timestamps[keyword]):
-                if keyword in frequency_periods.keys():
-                    frequency_periods[keyword].append((idx, end_idx))
-                else:
-                    frequency_periods[keyword] = [(idx, end_idx)]
-            idx = end_idx
-        print(frequency_periods)
-        if keyword in frequency_periods.keys():
-            frequency_result += "{} 在 ".format(keyword)
-            for (start, end) in frequency_periods[keyword]:
-                frequency_result += "{}({}条), ".format(
-                    unix2Datetime(str(keyword_timestamps[keyword][start])).astimezone(cntimezone).replace(tzinfo=None),
-                    end - start)
-            frequency_result += "\n"
-    print(frequency_result)
-    # Compose Ludeng
-    body = "路灯：\n" + luDeng + "\n" + "录播跳转：\n" + tiaoZhuan + "\n" + frequency_result
-    with open(streamInfo["danmu_file_name"], "a", encoding="utf-8") as danmu:
-        danmu.write(body)
-    return body
-
+userConfigs, streamInfos = loadConfig()
 
 import asyncio
 import blivedm
 import aiofiles
+
+
+async def write_to_file(text, filename):
+    async with aiofiles.open(filename, mode='a', encoding="utf-8") as f:
+        await f.write(text + "\n")
+
+
+def cleanMessage(message):
+    return f"{message.timestamp};{message.uname};{message.uid};{message.dm_type};{message.medal_room_id};{message.medal_level};{message.msg}"
 
 
 async def run_multi_clients():
@@ -207,15 +34,6 @@ async def run_multi_clients():
         ))
 
 
-async def write_to_file(text, filename):
-    async with aiofiles.open(filename, mode='a', encoding="utf-8") as f:
-        await f.write(text + "\n")
-
-
-def cleanMessage(message):
-    return f"{message.timestamp};{message.uname};{message.uid};{message.dm_type};{message.medal_room_id};{message.medal_level};{message.msg}"
-
-
 class MyHandler(blivedm.BaseHandler):
     # # 演示如何添加自定义回调
     # _CMD_CALLBACK_DICT = blivedm.BaseHandler._CMD_CALLBACK_DICT.copy()
@@ -232,9 +50,9 @@ class MyHandler(blivedm.BaseHandler):
 
     async def _on_danmaku(self, client: blivedm.BLiveClient, message: blivedm.DanmakuMessage):
         global streamInfo
-        if streaminfos[f'{client.room_id}']["live_status"] == 1:
+        if streamInfos[f'{client.room_id}']["live_status"] == 1:
             cleaned_message = cleanMessage(message)
-            await write_to_file(f'{cleaned_message}', streaminfos[f'{client.room_id}']["danmu_file_name"])
+            await write_to_file(f'{cleaned_message}', streamInfos[f'{client.room_id}']["danmu_file_name"])
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         pass
@@ -250,9 +68,9 @@ class MyHandler(blivedm.BaseHandler):
 
 
 async def main():
-    await updateLiveStatus()
+    await updateLiveStatus(userConfigs, streamInfos)
     task_1 = asyncio.create_task(run_multi_clients())
-    task_2 = asyncio.create_task(updateLiveStatus_loop())
+    task_2 = asyncio.create_task(updateLiveStatus_loop(userConfigs, streamInfos))
     await task_1
     await task_2
 
