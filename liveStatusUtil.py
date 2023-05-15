@@ -3,7 +3,7 @@ import asyncio
 import requests
 
 from emailUtil import send_start_email, send_ludeng
-
+import traceback
 
 def liveStartActions(userConfigs, streamInfos, ROOM_ID, res):
     streamInfos[ROOM_ID]['title'] = res["data"]["title"]
@@ -42,5 +42,9 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
 
 async def updateLiveStatus_loop(userConfigs, streamInfos):
     while True:
-        await asyncio.sleep(3)
-        await updateLiveStatus(userConfigs, streamInfos)
+        try:
+            await asyncio.sleep(3)
+            await updateLiveStatus(userConfigs, streamInfos)
+        except Exception:
+            with open("exception.txt", "a", encoding="utf-8") as log:
+                log.write(traceback.format_exc())

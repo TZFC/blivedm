@@ -7,7 +7,6 @@ import asyncio
 import blivedm
 import aiofiles
 
-
 async def write_to_file(text, filename):
     async with aiofiles.open(filename, mode='a', encoding="utf-8") as f:
         await f.write(text + "\n")
