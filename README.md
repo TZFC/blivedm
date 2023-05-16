@@ -35,8 +35,8 @@ Python获取bilibili直播弹幕的库，使用WebSocket协议
     "HIGHLIGHT_THRESHOLD" : 超过这个次数被记录,
     "LUDENG_USER" : {"<uid>": "email@email.com"}, 这些人会收到下播是的弹幕邮件
     "NOTIFY_USER" : {"<uid>": "email@email.com"}, 这些人会收到开播时的通知邮件
-    "BLOCKED_USER" : [], 这些人的路灯不会被记录 （因为没有这个需求, 暂未实现）
     "SEND_LIVE_NOTICE" : 1 (是否发送开播通知。1：是，0：否)
+    "RENQI_REMIND": -1 (提醒人气票的分钟，不启用设置成-1；启用将使用在edge浏览器登录的账号)
     }
     ```
 弹幕存储格式：
