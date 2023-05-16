@@ -1,7 +1,7 @@
-from configLoader import loadConfig
 from liveStatusUtil import updateLiveStatus, updateLiveStatus_loop
+from Config import Config
 
-userConfigs, streamInfos = loadConfig()
+myConfig = Config("ludengConfig.json")
 
 import asyncio
 import blivedm
@@ -17,7 +17,7 @@ def cleanMessage(message):
 
 
 async def run_multi_clients():
-    clients = [blivedm.BLiveClient(room_id) for room_id in userConfigs.keys()]
+    clients = [blivedm.BLiveClient(room_id) for room_id in myConfig.userConfigs.keys()]
     handler = MyHandler()
     for client in clients:
         client.add_handler(handler)
@@ -48,10 +48,10 @@ class MyHandler(blivedm.BaseHandler):
         # print(f'[{client.room_id}] 当前人气值：{message}')
 
     async def _on_danmaku(self, client: blivedm.BLiveClient, message: blivedm.DanmakuMessage):
-        global streamInfo
-        if streamInfos[f'{client.room_id}']["live_status"] == 1:
+        global myConfig
+        if myConfig.streamInfos[f'{client.room_id}']["live_status"] == 1:
             cleaned_message = cleanMessage(message)
-            await write_to_file(f'{cleaned_message}', streamInfos[f'{client.room_id}']["danmu_file_name"])
+            await write_to_file(f'{cleaned_message}', myConfig.streamInfos[f'{client.room_id}']["danmu_file_name"])
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         pass
@@ -66,13 +66,13 @@ class MyHandler(blivedm.BaseHandler):
         # print(f'[{client.room_id}] 醒目留言 {message}')
 
 
-async def main():
-    await updateLiveStatus(userConfigs, streamInfos)
+async def main(myConfig):
+    await updateLiveStatus(*myConfig.getConfigs())
     task_1 = asyncio.create_task(run_multi_clients())
-    task_2 = asyncio.create_task(updateLiveStatus_loop(userConfigs, streamInfos))
+    task_2 = asyncio.create_task(updateLiveStatus_loop(myConfig))
     await task_1
     await task_2
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main(myConfig))

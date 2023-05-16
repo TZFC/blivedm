@@ -10,6 +10,6 @@
 "HIGHLIGHT_TIMEFRAME" : 30,
 "LUDENG_USER" : {"<uid>": "email@email.com"},
 "NOTIFY_USER" : {"<uid>": "email@email.com"},
-"BLOCKED_USER" : [],
-"SEND_LIVE_NOTICE" : 1
+"SEND_LIVE_NOTICE" : 1,
+"RENQI_REMIND": 55
 }
