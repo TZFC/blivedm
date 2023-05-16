@@ -1,5 +1,5 @@
 aiohttp==3.7.4
 Brotli==1.0.9
-
+browser_cookie3
 aiofiles~=23.1.0
 requests~=2.30.0

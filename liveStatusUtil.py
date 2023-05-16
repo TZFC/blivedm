@@ -1,11 +1,12 @@
 import asyncio
+import traceback
+from datetime import datetime
 
 import requests
 
-from sendFunc import renqiRemind
 from emailUtil import send_start_email, send_ludeng
-from datetime import datetime
-import traceback
+from sendFunc import renqiRemind
+
 
 def liveStartActions(userConfig, streamInfo, res):
     streamInfo['title'] = res["title"]
@@ -39,8 +40,9 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
         elif streamInfos[ROOM_ID]['live_status'] == 1 and (
                 res["live_status"] == 0 or res["live_status"] == 2):  # 刚刚下播
             liveEndActions(userConfigs[ROOM_ID], streamInfos[ROOM_ID], res)
-        elif streamInfos[ROOM_ID]['live_status'] == 1 and res["live_status"] == 1: # 正在直播
-            if datetime.now().minute == userConfigs[ROOM_ID]["RENQI_REMIND"] and datetime.now().hour!=streamInfos[ROOM_ID]['last_remind_hour']:
+        elif streamInfos[ROOM_ID]['live_status'] == 1 and res["live_status"] == 1:  # 正在直播
+            if datetime.now().minute == userConfigs[ROOM_ID]["RENQI_REMIND"] and datetime.now().hour != \
+                    streamInfos[ROOM_ID]['last_remind_hour']:
                 streamInfos[ROOM_ID]['last_remind_hour'] = datetime.now().hour
                 await renqiRemind(userConfigs[ROOM_ID], streamInfos[ROOM_ID])
         streamInfos[ROOM_ID]['live_status'] = res["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中

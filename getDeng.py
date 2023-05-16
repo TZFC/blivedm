@@ -1,5 +1,7 @@
-from datetimeUtil import unix2Datetime, cn2Datetime, CN_TIMEZONE
 import traceback
+
+from datetimeUtil import unix2Datetime, cn2Datetime, CN_TIMEZONE
+
 
 def getDeng(config, streamInfo):
     try:
@@ -64,7 +66,8 @@ def getDeng(config, streamInfo):
                 frequency_result += "{} 在 ".format(keyword)
                 for (start, end) in frequency_periods[keyword]:
                     frequency_result += "{}({}条), ".format(
-                        unix2Datetime(str(keyword_timestamps[keyword][start])).astimezone(CN_TIMEZONE).replace(tzinfo=None),
+                        unix2Datetime(str(keyword_timestamps[keyword][start])).astimezone(CN_TIMEZONE).replace(
+                            tzinfo=None),
                         end - start)
                 frequency_result += "\n"
         # Compose Ludeng

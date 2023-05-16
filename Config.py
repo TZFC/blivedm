@@ -1,8 +1,11 @@
 import json
+
+
 class Config:
     userConfigs: dict
     streamInfos: dict
     ludengConfigName: str
+
     def __init__(self, ludengConfigName):
         self.ludengConfigName = ludengConfigName
         with open(ludengConfigName, 'r') as config:
@@ -33,6 +36,6 @@ class Config:
                 thisConfig = json.loads(config.read())
                 if thisConfig["ROOM_ID"] not in self.streamInfos.keys():
                     self.streamInfos[thisConfig["ROOM_ID"]] = {'live_status': 0, 'live_time': '0', 'keyframe': '0',
-                                                          'title': '0',
-                                                          'danmu_file_name': '0', 'last_remind_hour': -1}
+                                                               'title': '0',
+                                                               'danmu_file_name': '0', 'last_remind_hour': -1}
                 self.userConfigs[thisConfig["ROOM_ID"]] = thisConfig
