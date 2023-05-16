@@ -14,14 +14,16 @@ Python获取bilibili直播弹幕的库，使用WebSocket协议
     ```sh
     pip install -r requirements.txt
     ```
-
-3. 例程看[sample.py](./sample.py)
+3. 创建路径 danmu/与配置文件相同的主播昵称
+4. 运行 ludeng.py
+```
+python3 ludeng.py
+```
 
 ## 路灯说明
 
 新监听房间：
-1. 以sampleUserConfig.json为模板编写配置文件
-2. 将配置文件名加入ludengConfig.json
+1. 以sampleUserConfig.json为模板，为每个房间分别编写配置文件
     ```
     {
     "FROM_ADDRESS":"发送路灯邮件的邮箱，要求gmail",
@@ -39,5 +41,7 @@ Python获取bilibili直播弹幕的库，使用WebSocket协议
     "RENQI_REMIND": -1 (提醒人气票的分钟，不启用设置成-1；启用将使用在edge浏览器登录的账号)
     }
     ```
+2. 将配置文件名加入ludengConfig.json
+
 弹幕存储格式：
 时间戳（unix时间）;用户名;UID;是否为表情包;牌子房间号;牌子等级;弹幕内容
