@@ -16,6 +16,7 @@ Python获取bilibili直播弹幕的库，使用WebSocket协议
     ```
 3. 创建路径 danmu/与配置文件相同的主播昵称
 4. 运行 ludeng.py
+5. 若需要发送弹幕/评论的功能，运行refreshEdge.bat
 ```
 python3 ludeng.py
 ```
