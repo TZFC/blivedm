@@ -7,7 +7,6 @@ import requests
 from emailUtil import send_start_email, send_ludeng
 from sendFunc import renqiRemind
 
-
 def liveStartActions(userConfig, streamInfo, res):
     streamInfo['title'] = res["title"]
     streamInfo['live_time'] = res["live_time"]
@@ -18,6 +17,7 @@ def liveStartActions(userConfig, streamInfo, res):
         userConfig["ROOM_NAME"],
         streamInfo['live_time'].replace(" ", "-").replace(":", "-"),
         streamInfo['title'])
+    streamInfo['last_remind_hour'] = datetime.now().hour # do not send reminder on the live start hour
     with open(streamInfo['danmu_file_name'], "a", encoding="utf-8") as ludeng:
         ludeng.write(
             "{}于{}开始直播\n".format(userConfig["ROOM_NAME"], streamInfo['live_time']))
