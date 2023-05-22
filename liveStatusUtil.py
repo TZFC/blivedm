@@ -53,7 +53,7 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
 async def updateLiveStatus_loop(myConfig):
     while True:
         try:
-            await asyncio.sleep(3)
+            await asyncio.sleep(5)
             await myConfig.update()
             await updateLiveStatus(*myConfig.getConfigs())
         except Exception:
