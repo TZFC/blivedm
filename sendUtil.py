@@ -4,7 +4,7 @@ import browser_cookie3
 import requests.utils
 
 # Assumed Edge browser with bilibili logged in
-cookies = requests.utils.dict_from_cookiejar(browser_cookie3.chrome(domain_name='.bilibili.com'))
+cookies = requests.utils.dict_from_cookiejar(browser_cookie3.edge(domain_name='.bilibili.com'))
 SESSDATA = cookies["SESSDATA"]
 CSRF = cookies["bili_jct"]
 UID = cookies["DedeUserID"]
@@ -20,14 +20,15 @@ def updateCredentials():
     UID = cookies["DedeUserID"]
     COOKIE = '''DedeUserID={};SESSDATA={}; bili_jct={};'''.format(UID, SESSDATA, CSRF)
 
+
 def sendComment(text, video, cookie=COOKIE, csrf=CSRF):
-    url= 'https://api.bilibili.com/x/v2/reply/add'
+    url = 'https://api.bilibili.com/x/v2/reply/add'
     data = {
-        'type':1,
-        'oid':video,#TODO: what is this?
-        'message':text,
-        'plat':1,
-        'csrf':csrf
+        'type': 1,
+        'oid': video,  # same as aid in response
+        'message': text,
+        'plat': 1,
+        'csrf': csrf
     }
     with requests.Session() as session:
         session.cookies.set('Cookie', cookie)

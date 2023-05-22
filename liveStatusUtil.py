@@ -5,7 +5,8 @@ from datetime import datetime
 import requests
 
 from emailUtil import send_start_email, send_ludeng
-from sendFunc import renqiRemind
+from sendFunc import renqiRemind, luboComment
+
 
 def liveStartActions(userConfig, streamInfo, res):
     streamInfo['title'] = res["title"]
@@ -17,7 +18,7 @@ def liveStartActions(userConfig, streamInfo, res):
         userConfig["ROOM_NAME"],
         streamInfo['live_time'].replace(" ", "-").replace(":", "-"),
         streamInfo['title'])
-    streamInfo['last_remind_hour'] = datetime.now().hour # do not send reminder on the live start hour
+    streamInfo['last_remind_hour'] = datetime.now().hour  # do not send reminder on the live start hour
     with open(streamInfo['danmu_file_name'], "a", encoding="utf-8") as ludeng:
         ludeng.write(
             "{}于{}开始直播\n".format(userConfig["ROOM_NAME"], streamInfo['live_time']))
@@ -44,8 +45,9 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
             if datetime.now().minute == userConfigs[ROOM_ID]["RENQI_REMIND"] and datetime.now().hour != \
                     streamInfos[ROOM_ID]['last_remind_hour']:
                 streamInfos[ROOM_ID]['last_remind_hour'] = datetime.now().hour
-                await renqiRemind(userConfigs[ROOM_ID], streamInfos[ROOM_ID])
+                await renqiRemind(userConfigs[ROOM_ID])
         streamInfos[ROOM_ID]['live_status'] = res["live_status"]  # 0: 未开播 1: 直播中 2: 轮播中
+        await luboComment(userConfigs[ROOM_ID], streamInfos[ROOM_ID])
 
 
 async def updateLiveStatus_loop(myConfig):
