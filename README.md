@@ -41,8 +41,8 @@ python3 ludeng.py
     "SEND_LIVE_NOTICE" : 1, (是否发送开播通知。1：是，0：否)
     "RENQI_REMIND": -1, (提醒人气票的分钟，不启用设置成-1；启用将使用在edge浏览器登录的账号)
     "LUBO_API": ["https://api.bilibili.com/x/series/archives?mid=<UID>&series_id=<SID>&only_normal=true&sort=desc&pn=1&ps=30",
-                "https://api.bilibili.com/x/polymer/space/seasons_archives_list?mid=<UID>&season_id=<SID>&sort_reverse=true&page_num=1&page_size=30"]
-    } (SID 可以在合集url里找到)
+                "https://api.bilibili.com/x/polymer/space/seasons_archives_list?mid=<UID>&season_id=<SID>&sort_reverse=true&page_num=1&page_size=30"](SID 可以在合集url里找到)
+    } 
     ```
 2. 将配置文件名加入ludengConfig.json
 
