@@ -72,11 +72,12 @@ def getDeng(config, streamInfo):
                 frequency_result += "\n"
         # Compose Ludeng
         body = "路灯：\n" + luDeng + "\n" + "录播跳转：\n" + tiaoZhuan + "\n" + frequency_result + "\n"
-        with open("danmu/{}/{}{}.txt".format(
-                config["ROOM_NAME"],
-                streamInfo['live_time'].replace(" ", "-").replace(":", "-")[:13],
-                streamInfo['title']), "a", encoding="utf-8") as tiaoZhuanFile:
-            tiaoZhuanFile.write(tiaoZhuan)
+        if tiaoZhuan!="":
+            with open("danmu/{}/{}{}.txt".format(
+                    config["ROOM_NAME"],
+                    streamInfo['live_time'].replace(" ", "-").replace(":", "-")[:13],
+                    streamInfo['title']), "a", encoding="utf-8") as tiaoZhuanFile:
+                tiaoZhuanFile.write(tiaoZhuan)
         return body
     except Exception:
         with open("exception.txt", "a", encoding="utf-8") as log:
