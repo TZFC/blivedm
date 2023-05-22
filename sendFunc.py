@@ -25,7 +25,7 @@ async def luboComment(userConfig, streamInfo):
                 sendComment(commentText, latest["aid"])
             except:
                 with open("exception.txt", "a", encoding="utf-8") as log:
-                    log.write("{} not found for {}".format(filename, latest["title"]))
+                    log.write("{} not found for {}\n".format(filename, latest["title"]))
             streamInfo["last_comment_aids"][repo] = latest["aid"]
 
 
