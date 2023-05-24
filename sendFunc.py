@@ -33,7 +33,7 @@ async def luboComment(userConfig, streamInfo):
             streamInfo["last_comment_aids"][repo] = latest["aid"]
     for file in os.listdir("danmu/{}".format(userConfig["ROOM_NAME"])):
         if file <= lesser_file:
-            os.remove(file)
+            os.remove("danmu/{}/{}".format(userConfig["ROOM_NAME"], file))
 
 
 def translateTitle(luboTitle) -> str:
