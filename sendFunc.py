@@ -32,7 +32,7 @@ async def luboComment(userConfig, streamInfo):
                     log.write("{} not found for {}\n".format(filename, latest["title"]))
             streamInfo["last_comment_aids"][repo] = latest["aid"]
     for file in os.listdir("danmu/{}".format(userConfig["ROOM_NAME"])):
-        if file < lesser_file:
+        if file <= lesser_file:
             os.remove(file)
 
 
