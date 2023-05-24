@@ -1,3 +1,4 @@
+import os
 import re
 
 import requests
@@ -11,12 +12,15 @@ async def renqiRemind(userConfig):
 
 
 async def luboComment(userConfig, streamInfo):
+    lesser_file = "9"
     for repo in userConfig["LUBO_API"]:
         latest = requests.get(repo).json()["data"]['archives'][0]
+        filename = translateTitle(latest["title"])
+        if filename < lesser_file:
+            lesser_file = filename
         if latest["aid"] == streamInfo["last_comment_aids"][repo]:
             continue
         else:
-            filename = translateTitle(latest["title"])
             try:
                 with open("danmu/{}/{}".format(userConfig["ROOM_NAME"], filename), "r",
                           encoding="utf-8") as commentFile:
@@ -27,6 +31,9 @@ async def luboComment(userConfig, streamInfo):
                 with open("exception.txt", "a", encoding="utf-8") as log:
                     log.write("{} not found for {}\n".format(filename, latest["title"]))
             streamInfo["last_comment_aids"][repo] = latest["aid"]
+    for file in os.listdir("danmu/{}".format(userConfig["ROOM_NAME"])):
+        if file < lesser_file:
+            os.remove(file)
 
 
 def translateTitle(luboTitle) -> str:
