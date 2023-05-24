@@ -1,7 +1,7 @@
 import asyncio
 import traceback
 from datetime import datetime
-
+import os
 import requests
 
 from emailUtil import send_start_email, send_ludeng
@@ -26,6 +26,11 @@ def liveStartActions(userConfig, streamInfo, res):
 
 def liveEndActions(userConfig, streamInfo, res):
     send_ludeng(userConfig, streamInfo)
+    try:
+        os.remove(streamInfo["danmu_file_name"])
+    except:
+        with open("exception.txt", "a", encoding="utf-8") as log:
+            log.write(traceback.format_exc())
     streamInfo['title'] = res["title"]
     streamInfo['live_time'] = res["live_time"]
     streamInfo['keyframe'] = res["keyframe"]
