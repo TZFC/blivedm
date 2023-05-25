@@ -12,6 +12,8 @@ async def renqiRemind(userConfig):
 
 
 async def luboComment(userConfig, streamInfo):
+    if userConfig["LUBO_API"] == []:
+        return
     lesser_file = "9"
     for repo in userConfig["LUBO_API"]:
         latest = requests.get(repo).json()["data"]['archives'][0]
