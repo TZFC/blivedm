@@ -41,8 +41,8 @@ async def luboComment(userConfig, streamInfo):
 
 
 def translateTitle(luboTitle) -> str:
-    # expect lubo Title to have <year>*<month>*<date>*<hour> as the last 4 separated integer segments
-    pattern = r'[^0-9]*([0-9]+)[^0-9]*'
-    segments = re.findall(pattern, luboTitle)[-4:]
+    # expect lubo Title to have 非数字内容<year>年<month>月<date>日<hour>非数字内容 as the last 4 separated integer segments
+    pattern = r'[^0-9]*([0-9]+)年([0-9]+)月([0-9]+)日([0-9]+)[^0-9]*'
+    segments = re.findall(pattern, luboTitle)[0]
     filled_segments = [x if len(x) > 1 else "0" + x for x in segments]
     return "-".join(filled_segments) + ".txt"
