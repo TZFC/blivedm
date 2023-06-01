@@ -38,5 +38,6 @@ class Config:
                 if thisConfig["ROOM_ID"] not in self.streamInfos.keys():
                     self.streamInfos[thisConfig["ROOM_ID"]] = {'live_status': 0, 'live_time': '0', 'keyframe': '0',
                                                                'title': '0',
+                                                               'last_comment_aids': {api: 0 for api in thisConfig["LUBO_API"]},
                                                                'danmu_file_name': '0', 'last_remind_hour': -1}
                 self.userConfigs[thisConfig["ROOM_ID"]] = thisConfig
