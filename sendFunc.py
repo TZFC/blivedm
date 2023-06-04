@@ -19,11 +19,11 @@ async def luboComment(userConfig, streamInfo):
         latest = requests.get(repo).json()["data"]['archives'][0]
         filename = translateTitle(latest["title"])
         if filename == "invalid title":
-            streamInfo["last_comment_aids"][repo] = latest["aid"]
+            streamInfo["last_comment_titles"][repo] = latest["title"]
             continue
         if filename < lesser_file:
             lesser_file = filename
-        if latest["aid"] == streamInfo["last_comment_aids"][repo]:
+        if latest["title"] == streamInfo["last_comment_titles"][repo]:
             continue
         else:
             try:
@@ -35,7 +35,7 @@ async def luboComment(userConfig, streamInfo):
             except:
                 with open("exception.txt", "a", encoding="utf-8") as log:
                     log.write("{} not found for {}\n".format(filename, latest["title"]))
-        streamInfo["last_comment_aids"][repo] = latest["aid"]
+        streamInfo["last_comment_titles"][repo] = latest["title"]
     if lesser_file == "9": # in case api returns unexpected response
         return
     for file in os.listdir("danmu/{}".format(userConfig["ROOM_NAME"])):
