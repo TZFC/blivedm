@@ -48,7 +48,7 @@ def getDeng(config, streamInfo):
                     continue
                 # meet the highlight threshold in timeframe
                 while end_idx < len(keyword_timestamps[keyword]):
-                    if keyword_timestamps[keyword][end_idx] - keyword_timestamps[keyword][end_idx - 1] >= density:
+                    if keyword_timestamps[keyword][end_idx] - keyword_timestamps[keyword][end_idx - 1] >= density * 2:
                         if keyword in frequency_periods.keys():
                             frequency_periods[keyword].append((idx, end_idx))
                         else:
