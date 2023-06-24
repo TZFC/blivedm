@@ -16,7 +16,12 @@ async def luboComment(userConfig, streamInfo):
         return
     lesser_file = "9"
     for repo in userConfig["LUBO_API"]:
-        latest = requests.get(repo).json()["data"]['archives'][0]
+        try:
+            latest = requests.get(repo).json()["data"]['archives'][0]
+        except:
+            with open("exception.txt", "a", encoding="utf-8") as log:
+                log.write("{} has no archive".format(repo))
+            continue
         filename = translateTitle(latest["title"])
         if filename == "invalid title":
             streamInfo["last_comment_titles"][repo] = latest["title"]
