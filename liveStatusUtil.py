@@ -40,9 +40,7 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
     url = "http://api.live.bilibili.com/room/v1/Room/get_info?room_id="
     for ROOM_ID in streamInfos.keys():
         res = requests.get(url + ROOM_ID).json()["data"]
-        try:
-            res["live_status"] == 1
-        except:
+        if "live_status" not in res:
             continue
         if (streamInfos[ROOM_ID]['live_status'] == 0 or streamInfos[ROOM_ID]['live_status'] == 2) and res[
             "live_status"] == 1:  # 刚刚开播
@@ -62,7 +60,7 @@ async def updateLiveStatus(userConfigs, streamInfos):  # 获取直播间开播�
 async def updateLiveStatus_loop(myConfig):
     while True:
         try:
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
             await myConfig.update()
             await updateLiveStatus(*myConfig.getConfigs())
         except Exception:
